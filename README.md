@@ -2,7 +2,7 @@
 
 Dashboard interativa em um único arquivo HTML, feita a partir de uma planilha com 100 vendas da Porsche. Responde três perguntas de negócio, tem cinco filtros e indicadores de topo, e usa uma identidade preta e dourada.
 
-**Endereço da dashboard:** https://SEU-USUARIO.github.io/dashboard-vendas-porsche/
+**Endereço da dashboard:** https://alineraniery10-lgtm.github.io/dashboard-vendas-porsche/
 
 ![Dashboard completa](prints/dashboard.png)
 
@@ -86,4 +86,4 @@ Aprendizado: a ferramenta acerta a parte mecânica (somar, filtrar), mas defini�
 
 ## Publicar
 
-Em Settings > Pages do repositório, escolha a branch `main` e a pasta raiz. A dashboard abre em `https://SEU-USUARIO.github.io/dashboard-vendas-porsche/`.
+Em Settings > Pages do repositório, escolha a branch `main` e a pasta raiz. A dashboard abre em `https://alineraniery10-lgtm.github.io/dashboard-vendas-porsche/`.
