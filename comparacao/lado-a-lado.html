@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude e Gemini lado a lado</title>
+<style>
+  :root{--bg:#0c0b09;--line:#2b2619;--ink:#f3ecdb;--muted:#bdb399;--gold:#d4b26e}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Jost","Helvetica Neue",Arial,sans-serif;display:flex;flex-direction:column}
+  header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;justify-content:space-between}
+  h1{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:26px;color:var(--gold)}
+  header p{margin:0;color:var(--muted);font-size:14px}
+  header a{color:var(--gold)}
+  main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr}
+  section{display:flex;flex-direction:column;min-width:0;min-height:0}
+  section + section{border-left:1px solid var(--line)}
+  h2{margin:0;padding:10px 20px;font-size:15px;font-weight:500;border-bottom:1px solid var(--line)}
+  h2 span{color:var(--muted);font-weight:400}
+  iframe{flex:1;width:100%;min-height:0;border:0;background:#0c0b09}
+  @media (max-width:860px){
+    html,body{height:auto}
+    main{grid-template-columns:1fr}
+    section + section{border-left:0;border-top:1px solid var(--line)}
+    iframe{height:80vh;flex:none}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Claude e Gemini lado a lado</h1>
+  <p>Mesma base, mesmas três perguntas. Use os filtros nos dois lados. <a href="../">Voltar à dashboard</a></p>
+</header>
+<main>
+  <section>
+    <h2>Claude <span>dashboard principal</span></h2>
+    <iframe src="claude.html" title="Dashboard feita com o Claude"></iframe>
+  </section>
+  <section>
+    <h2>Gemini <span>Gem com instruções, sem alterações</span></h2>
+    <iframe src="gemini.html" title="Dashboard feita com o Gem do Gemini"></iframe>
+  </section>
+</main>
+</body>
+</html>

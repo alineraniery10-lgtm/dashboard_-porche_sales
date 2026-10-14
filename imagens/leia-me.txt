@@ -1,0 +1,3 @@
+Coloque aqui uma foto de fundo para o topo da dashboard, com o nome hero.jpg.
+Se o arquivo não existir, a dashboard funciona normalmente, só sem a foto.
+Use apenas imagens que você tenha direito de publicar (fotos próprias ou material com licença que permita o uso).

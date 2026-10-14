@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porsche Sales Intelligence Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0a;
+            --bg-card: #141414;
+            --bg-input: #1f1f1f;
+            --gold: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-dark: #aa8c2c;
+            --text-main: #f5f5f5;
+            --text-muted: #a0a0a0;
+            --border: #2a2a2a;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Container Principal */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Seção de Filtros */
+        .filters-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gold-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus {
+            border-color: var(--gold);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background 0.2s, color 0.2s;
+            width: 100%;
+        }
+
+        .btn-reset:hover {
+            background: var(--gold);
+            color: var(--bg-deep);
+        }
+
+        /* Indicadores de Topo (KPIs) */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--gold);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+
+        /* Seção de Gráficos de Negócio */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-header {
+            margin-bottom: 20px;
+        }
+
+        .chart-question {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 6px;
+        }
+
+        .chart-insight {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .chart-body {
+            position: relative;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* Barras customizadas em CSS/HTML puro */
+        .bar-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .bar-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .bar-track {
+            background: var(--bg-input);
+            height: 24px;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .bar-fill {
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bar-label-direct {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--bg-deep);
+            text-shadow: 0 0 2px rgba(255,255,255,0.6);
+        }
+
+        /* Tabela de Linhas Filtradas */
+        .table-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            margin-bottom: 40px;
+        }
+
+        .table-header {
+            margin-bottom: 15px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.88rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--bg-input);
+            color: var(--gold);
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover td {
+            background-color: rgba(212, 175, 55, 0.03);
+        }
+
+        /* Responsividade para celulares */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.7rem;
+            }
+            .kpi-value {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <header>
+            <h1>Porsche Intelligence Dashboard</h1>
+            <p>Análise Executiva de Vendas & Desempenho Comercial</p>
+        </header>
+
+        <!-- Filtros Combinados -->
+        <section class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="filter-familia">Família</label>
+                    <select id="filter-familia" onchange="updateDashboard()">
+                        <option value="">Todas as Famílias</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-estado">Estado</label>
+                    <select id="filter-estado" onchange="updateDashboard()">
+                        <option value="">Todos os Estados</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-ano">Ano do Modelo</label>
+                    <select id="filter-ano" onchange="updateDashboard()">
+                        <option value="">Todos os Anos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-pagamento">Pagamento</label>
+                    <select id="filter-pagamento" onchange="updateDashboard()">
+                        <option value="">Todas as Formas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-entrega">Entrega (Status)</label>
+                    <select id="filter-entrega" onchange="updateDashboard()">
+                        <option value="">Todos os Status</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button class="btn-reset" onclick="resetFilters()">Limpar Filtros</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Indicadores de Topo (KPIs) -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Total de Vendas</div>
+                <div class="kpi-value" id="kpi-vendas">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Receita Total</div>
+                <div class="kpi-value" id="kpi-receita">US$ 0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Ticket Médio</div>
+                <div class="kpi-value" id="kpi-ticket">US$ 0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Não Entregue</div>
+                <div class="kpi-value" id="kpi-pendente">US$ 0</div>
+            </div>
+        </section>
+
+        <!-- Perguntas de Negócio / Gráficos -->
+        <section class="charts-section">
+            <!-- Pergunta 1 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-question">1. Quais famílias geram mais receita?</div>
+                    <div class="chart-insight" id="insight-familia">Carregando análise...</div>
+                </div>
+                <div class="chart-body" id="chart-familia-bars"></div>
+            </div>
+
+            <!-- Pergunta 2 -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-question">2. Onde a receita se concentra por estado?</div>
+                    <div class="chart-insight" id="insight-estado">Carregando análise...</div>
+                </div>
+                <div class="chart-body" id="chart-estado-bars"></div>
+            </div>
+
+            <!-- Pergunta 3 -->
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <div class="chart-question">3. Quanto da receita já foi entregue?</div>
+                    <div class="chart-insight" id="insight-entrega">Carregando análise...</div>
+                </div>
+                <div class="chart-body" id="chart-entrega-bars"></div>
+            </div>
+        </section>
+
+        <!-- Tabela de Linhas Filtradas -->
+        <section class="table-section">
+            <div class="table-header">
+                <h2>Registros Detalhados (<span id="table-count">0</span> veículos)</h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Modelo</th>
+                            <th>Família</th>
+                            <th>Ano</th>
+                            <th>Preço (USD)</th>
+                            <th>KM / Milhas</th>
+                            <th>Pagamento</th>
+                            <th>Cidade</th>
+                            <th>Estado</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Dados embutidos no próprio HTML a partir da base de 100 vendas
+        const rawData = [
+            {id: 6, modelo: "718 Cayman", ano_modelo: 2022, preco_usd: 79500, km_milhas: 9800, pagamento: "Credit Card", cidade: "Boston", estado: "MA", status_original: "Delivered", familia: "718", status: "Entregue"},
+            {id: 7, modelo: "911 Turbo S", ano_modelo: 2024, preco_usd: 235000, km_milhas: 1200, pagamento: "Wire Transfer", cidade: "Seattle", estado: "WA", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 8, modelo: "Cayenne Coupe", ano_modelo: 2023, preco_usd: 112750, km_milhas: 6400, pagamento: "Financing", cidade: "Austin", estado: "TX", status_original: "In Transit", familia: "Cayenne", status: "Em trânsito"},
+            {id: 9, modelo: "Macan S", ano_modelo: 2021, preco_usd: 68900, km_milhas: 28, pagamento: "Cash", cidade: "Denver", estado: "CO", status_original: "Pending", familia: "Macan", status: "Aguardando"},
+            {id: 10, modelo: "Taycan 4S", ano_modelo: 2024, preco_usd: 121000, km_milhas: 0, pagamento: "Bank Transfer", cidade: "Los Angeles", estado: "CA", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 11, modelo: "Panamera 4", ano_modelo: 2023, preco_usd: 104500, km_milhas: 14500, pagamento: "Credit Card", cidade: "Miami", estado: "FL", status_original: "Cancelled", familia: "Panamera", status: "Cancelada"},
+            {id: 12, modelo: "911 Carrera S", ano_modelo: 2020, preco_usd: 96300, km_milhas: 41000, pagamento: "Lease", cidade: "New York", estado: "NY", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 13, modelo: "Cayenne E-Hybrid", ano_modelo: 2022, preco_usd: 89750, km_milhas: 11744, pagamento: "Wire Transfer", cidade: "San Diego", estado: "CA", status_original: "Pending Approval", familia: "Cayenne", status: "Aguardando"},
+            {id: 14, modelo: "718 Boxster", ano_modelo: 2021, preco_usd: 73500, km_milhas: 22300, pagamento: "Debit Card", cidade: "Chicago", estado: "IL", status_original: "Shipped", familia: "718", status: "Em trânsito"},
+            {id: 15, modelo: "Macan GTS", ano_modelo: 2024, preco_usd: 95000, km_milhas: 3500, pagamento: "Financing", cidade: "Phoenix", estado: "AZ", status_original: "In Transit", familia: "Macan", status: "Em trânsito"},
+            {id: 16, modelo: "Taycan Turbo", ano_modelo: 2023, preco_usd: 153200, km_milhas: 11, pagamento: "ACH Payment", cidade: "Dallas", estado: "TX", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 17, modelo: "911 GT3", ano_modelo: 2024, preco_usd: 241000, km_milhas: 750, pagamento: "Wire Transfer", cidade: "Las Vegas", estado: "NV", status_original: "Pending", familia: "911", status: "Aguardando"},
+            {id: 18, modelo: "Panamera Turbo S", ano_modelo: 2022, preco_usd: 132000, km_milhas: 19250, pagamento: "Cash", cidade: "San Jose", estado: "CA", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 19, modelo: "Cayenne Turbo GT", ano_modelo: 2024, preco_usd: 188000, km_milhas: 2100, pagamento: "Crypto Payment", cidade: "Houston", estado: "TX", status_original: "Awaiting Delivery", familia: "Cayenne", status: "Aguardando"},
+            {id: 20, modelo: "911 Carrera Cabriolet", ano_modelo: 2023, preco_usd: 127800, km_milhas: 12000, pagamento: "Credit Card", cidade: "Atlanta", estado: "GA", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 21, modelo: "Macan", ano_modelo: 2021, preco_usd: 58900, km_milhas: 33700, pagamento: "Bank Transfer", cidade: "Orlando", estado: "FL", status_original: "Pending", familia: "Macan", status: "Aguardando"},
+            {id: 22, modelo: "718 Spyder RS", ano_modelo: 2024, preco_usd: 164000, km_milhas: 900, pagamento: "Financing", cidade: "Portland", estado: "OR", status_original: "In Transit", familia: "718", status: "Em trânsito"},
+            {id: 23, modelo: "Taycan Cross Turismo", ano_modelo: 2023, preco_usd: 118500, km_milhas: 7800, pagamento: "Wire Transfer", cidade: "Charlotte", estado: "NC", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 24, modelo: "Cayenne S", ano_modelo: 2022, preco_usd: 91300, km_milhas: 16000, pagamento: "Credit Card", cidade: "Nashville", estado: "TN", status_original: "Pending", familia: "Cayenne", status: "Aguardando"},
+            {id: 25, modelo: "911 Targa 4S", ano_modelo: 2024, preco_usd: 158750, km_milhas: 2500, pagamento: "Lease", cidade: "Minneapolis", estado: "MN", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 26, modelo: "Panamera", ano_modelo: 2020, preco_usd: 72000, km_milhas: 49000, pagamento: "Bank Transfer", cidade: "Philadelphia", estado: "PA", status_original: "Cancelled", familia: "Panamera", status: "Cancelada"},
+            {id: 27, modelo: "Macan Electric", ano_modelo: 2025, preco_usd: 86500, km_milhas: 0, pagamento: "Wire Transfer", cidade: "San Antonio", estado: "TX", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 28, modelo: "911 Dakar", ano_modelo: 2024, preco_usd: 270000, km_milhas: 1050, pagamento: "Cash", cidade: "Salt Lake City", estado: "UT", status_original: "Awaiting Pickup", familia: "911", status: "Aguardando"},
+            {id: 29, modelo: "Taycan GTS", ano_modelo: 2023, preco_usd: 139000, km_milhas: 6250, pagamento: "Financing", cidade: "Raleigh", estado: "NC", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 30, modelo: "Cayenne", ano_modelo: 2021, preco_usd: 76800, km_milhas: 38400, pagamento: "Credit Card", cidade: "Detroit", estado: "MI", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 31, modelo: "718 Cayman GT4 RS", ano_modelo: 2024, preco_usd: 173600, km_milhas: 400, pagamento: "Wire Transfer", cidade: "Columbus", estado: "OH", status_original: "Pending", familia: "718", status: "Aguardando"},
+            {id: 32, modelo: "911 Carrera GTS", ano_modelo: 2022, preco_usd: 119900, km_milhas: 13600, pagamento: "Cash", cidade: "Indianapolis", estado: "IN", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 33, modelo: "Panamera 4 E-Hybrid", ano_modelo: 2023, preco_usd: 109250, km_milhas: 8900, pagamento: "Lease", cidade: "Fort Worth", estado: "TX", status_original: "In Transit", familia: "Panamera", status: "Em trânsito"},
+            {id: 34, modelo: "Macan T", ano_modelo: 2022, preco_usd: 82000, km_milhas: 21750, pagamento: "Wire Transfer", cidade: "Jacksonville", estado: "FL", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 35, modelo: "Taycan Turbo S", ano_modelo: 2025, preco_usd: 214000, km_milhas: 0, pagamento: "Crypto Payment", cidade: "San Diego", estado: "CA", status_original: "Pending Review", familia: "Taycan", status: "Aguardando"},
+            {id: 36, modelo: "911 Carrera", ano_modelo: 2024, preco_usd: 124500, km_milhas: 4800, pagamento: "Credit Card", cidade: "Tampa", estado: "FL", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 37, modelo: "Cayenne S", ano_modelo: 2023, preco_usd: 98200, km_milhas: 12200, pagamento: "Bank Transfer", cidade: "Sacramento", estado: "CA", status_original: "Pending", familia: "Cayenne", status: "Aguardando"},
+            {id: 38, modelo: "Macan", ano_modelo: 2022, preco_usd: 67500, km_milhas: 24100, pagamento: "Financing", cidade: "Cleveland", estado: "OH", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 39, modelo: "Taycan", ano_modelo: 2025, preco_usd: 116900, km_milhas: 0, pagamento: "Wire Transfer", cidade: "Milwaukee", estado: "WI", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 40, modelo: "Panamera 4S", ano_modelo: 2024, preco_usd: 112000, km_milhas: 10, pagamento: "Cash", cidade: "Kansas City", estado: "MO", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 41, modelo: "718 Boxster", ano_modelo: 2021, preco_usd: 74000, km_milhas: 31000, pagamento: "Debit Card", cidade: "Omaha", estado: "NE", status_original: "Cancelled", familia: "718", status: "Cancelada"},
+            {id: 42, modelo: "911 Turbo", ano_modelo: 2024, preco_usd: 198300, km_milhas: 2400, pagamento: "Wire Transfer", cidade: "Albuquerque", estado: "NM", status_original: "Awaiting Delivery", familia: "911", status: "Aguardando"},
+            {id: 43, modelo: "Cayenne Coupe", ano_modelo: 2023, preco_usd: 103750, km_milhas: 6773, pagamento: "Wire Transfer", cidade: "Tucson", estado: "AZ", status_original: "Pending Approval", familia: "Cayenne", status: "Aguardando"},
+            {id: 44, modelo: "Macan GTS", ano_modelo: 2024, preco_usd: 93600, km_milhas: 5800, pagamento: "Financing", cidade: "Fresno", estado: "CA", status_original: "Shipped", familia: "Macan", status: "Em trânsito"},
+            {id: 45, modelo: "Taycan 4S", ano_modelo: 2025, preco_usd: 129000, km_milhas: 0, pagamento: "ACH Payment", cidade: "Virginia Beach", estado: "VA", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 46, modelo: "Panamera Turbo", ano_modelo: 2022, preco_usd: 136000, km_milhas: 18400, pagamento: "Credit Card", cidade: "Colorado Springs", estado: "CO", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 47, modelo: "911 GT3 RS", ano_modelo: 2024, preco_usd: 286500, km_milhas: 700, pagamento: "Wire Transfer", cidade: "Arlington", estado: "TX", status_original: "Pending", familia: "911", status: "Aguardando"},
+            {id: 48, modelo: "Cayenne E-Hybrid", ano_modelo: 2023, preco_usd: 92800, km_milhas: 15000, pagamento: "Lease", cidade: "Bakersfield", estado: "CA", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 49, modelo: "Macan T", ano_modelo: 2022, preco_usd: 72400, km_milhas: 19750, pagamento: "Cash", cidade: "Mesa", estado: "AZ", status_original: "Awaiting Pickup", familia: "Macan", status: "Aguardando"},
+            {id: 50, modelo: "Taycan Turbo", ano_modelo: 2025, preco_usd: 158500, km_milhas: 3200, pagamento: "Crypto Payment", cidade: "Atlanta", estado: "GA", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 51, modelo: "718 Cayman", ano_modelo: 2021, preco_usd: 69900, km_milhas: 27600, pagamento: "Bank Transfer", cidade: "Long Beach", estado: "CA", status_original: "Pending", familia: "718", status: "Aguardando"},
+            {id: 52, modelo: "911 Targa 4", ano_modelo: 2024, preco_usd: 141250, km_milhas: 2100, pagamento: "Financing", cidade: "Oakland", estado: "CA", status_original: "In Transit", familia: "911", status: "Em trânsito"},
+            {id: 53, modelo: "Panamera", ano_modelo: 2020, preco_usd: 71500, km_milhas: 52000, pagamento: "Wire Transfer", cidade: "Tulsa", estado: "OK", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 54, modelo: "Cayenne Turbo", ano_modelo: 2023, preco_usd: 146800, km_milhas: 11300, pagamento: "Credit Card", cidade: "Wichita", estado: "KS", status_original: "Pending", familia: "Cayenne", status: "Aguardando"},
+            {id: 55, modelo: "Macan Electric", ano_modelo: 2025, preco_usd: 89700, km_milhas: 0, pagamento: "Lease", cidade: "New Orleans", estado: "LA", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 56, modelo: "911 Carrera S", ano_modelo: 2022, preco_usd: 104600, km_milhas: 15900, pagamento: "Bank Transfer", cidade: "Honolulu", estado: "HI", status_original: "Cancelled", familia: "911", status: "Cancelada"},
+            {id: 57, modelo: "Taycan GTS", ano_modelo: 2024, preco_usd: 142000, km_milhas: 6600, pagamento: "Wire Transfer", cidade: "Anaheim", estado: "CA", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 58, modelo: "Cayenne", ano_modelo: 2021, preco_usd: 78400, km_milhas: 40250, pagamento: "Cash", cidade: "Henderson", estado: "NV", status_original: "Awaiting Review", familia: "Cayenne", status: "Aguardando"},
+            {id: 59, modelo: "718 Spyder RS", ano_modelo: 2025, preco_usd: 169000, km_milhas: 850, pagamento: "Financing", cidade: "Lexington", estado: "KY", status_original: "In Transit", familia: "718", status: "Em trânsito"},
+            {id: 60, modelo: "911 Dakar", ano_modelo: 2024, preco_usd: 268900, km_milhas: 1400, pagamento: "Credit Card", cidade: "Riverside", estado: "CA", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 61, modelo: "Panamera 4", ano_modelo: 2023, preco_usd: 101300, km_milhas: 12700, pagamento: "Wire Transfer", cidade: "Corpus Christi", estado: "TX", status_original: "Pending", familia: "Panamera", status: "Aguardando"},
+            {id: 62, modelo: "Macan S", ano_modelo: 2021, preco_usd: 66750, km_milhas: 29800, pagamento: "Cash", cidade: "St. Louis", estado: "MO", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 63, modelo: "Taycan Cross Turismo", ano_modelo: 2024, preco_usd: 127900, km_milhas: 7500, pagamento: "Lease", cidade: "Pittsburgh", estado: "PA", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 64, modelo: "Cayenne Turbo GT", ano_modelo: 2025, preco_usd: 200000, km_milhas: 1950, pagamento: "Wire Transfer", cidade: "Cincinnati", estado: "OH", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 65, modelo: "911 Carrera Cabriolet", ano_modelo: 2023, preco_usd: 132000, km_milhas: 8800, pagamento: "Crypto Payment", cidade: "Anchorage", estado: "AK", status_original: "Pending Review", familia: "911", status: "Aguardando"},
+            {id: 66, modelo: "718 Cayman GT4 RS", ano_modelo: 2024, preco_usd: 176400, km_milhas: 600, pagamento: "Credit Card", cidade: "Plano", estado: "TX", status_original: "Delivered", familia: "718", status: "Entregue"},
+            {id: 67, modelo: "Panamera 4 E-Hybrid", ano_modelo: 2022, preco_usd: 108500, km_milhas: 16200, pagamento: "Bank Transfer", cidade: "Newark", estado: "NJ", status_original: "Cancelled", familia: "Panamera", status: "Cancelada"},
+            {id: 68, modelo: "Macan", ano_modelo: 2021, preco_usd: 59000, km_milhas: 36000, pagamento: "Financing", cidade: "Greensboro", estado: "NC", status_original: "Awaiting Delivery", familia: "Macan", status: "Aguardando"},
+            {id: 69, modelo: "Taycan Turbo S", ano_modelo: 2025, preco_usd: 218000, km_milhas: 0, pagamento: "Wire Transfer", cidade: "Lincoln", estado: "NE", status_original: "Pending", familia: "Taycan", status: "Aguardando"},
+            {id: 70, modelo: "Cayenne S", ano_modelo: 2024, preco_usd: 99950, km_milhas: 5300, pagamento: "Debit Card", cidade: "Jersey City", estado: "NJ", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 71, modelo: "911 Carrera GTS", ano_modelo: 2024, preco_usd: 121750, km_milhas: 5872, pagamento: "Credit Card", cidade: "Chandler", estado: "AZ", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 72, modelo: "718 Boxster GTS", ano_modelo: 2023, preco_usd: 91500, km_milhas: 13300, pagamento: "Lease", cidade: "Reno", estado: "NV", status_original: "Shipped", familia: "718", status: "Em trânsito"},
+            {id: 73, modelo: "Panamera Turbo S", ano_modelo: 2022, preco_usd: 134000, km_milhas: 20100, pagamento: "Wire Transfer", cidade: "Buffalo", estado: "NY", status_original: "In Transit", familia: "Panamera", status: "Em trânsito"},
+            {id: 74, modelo: "Macan GTS", ano_modelo: 2024, preco_usd: 96800, km_milhas: 0, pagamento: "ACH Payment", cidade: "Durham", estado: "NC", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 75, modelo: "Taycan 4S", ano_modelo: 2025, preco_usd: 131600, km_milhas: 2900, pagamento: "Wire Transfer", cidade: "Laredo", estado: "TX", status_original: "Pending Approval", familia: "Taycan", status: "Aguardando"},
+            {id: 76, modelo: "Cayenne E-Hybrid", ano_modelo: 2023, preco_usd: 94300, km_milhas: 13100, pagamento: "Cash", cidade: "Madison", estado: "WI", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 77, modelo: "911 Turbo S", ano_modelo: 2025, preco_usd: 242000, km_milhas: 1100, pagamento: "Crypto Payment", cidade: "Lubbock", estado: "TX", status_original: "Awaiting Pickup", familia: "911", status: "Aguardando"},
+            {id: 78, modelo: "718 Cayman S", ano_modelo: 2022, preco_usd: 82750, km_milhas: 22500, pagamento: "Credit Card", cidade: "Toledo", estado: "OH", status_original: "Cancelled", familia: "718", status: "Cancelada"},
+            {id: 79, modelo: "Macan Electric", ano_modelo: 2026, preco_usd: 91300, km_milhas: 0, pagamento: "Wire Transfer", cidade: "Irvine", estado: "CA", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 80, modelo: "Panamera", ano_modelo: 2021, preco_usd: 79900, km_milhas: 44800, pagamento: "Financing", cidade: "Garland", estado: "TX", status_original: "Pending", familia: "Panamera", status: "Aguardando"},
+            {id: 81, modelo: "Cayenne Coupe", ano_modelo: 2024, preco_usd: 111000, km_milhas: 6700, pagamento: "Bank Transfer", cidade: "Irving", estado: "TX", status_original: "In Transit", familia: "Cayenne", status: "Em trânsito"},
+            {id: 82, modelo: "911 Targa 4S", ano_modelo: 2023, preco_usd: 156500, km_milhas: 4200, pagamento: "Cash", cidade: "Chesapeake", estado: "VA", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 83, modelo: "Taycan", ano_modelo: 2025, preco_usd: 119900, km_milhas: 1250, pagamento: "Lease", cidade: "Scottsdale", estado: "AZ", status_original: "Pending", familia: "Taycan", status: "Aguardando"},
+            {id: 84, modelo: "Macan T", ano_modelo: 2022, preco_usd: 73200, km_milhas: 18600, pagamento: "Wire Transfer", cidade: "Norfolk", estado: "VA", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 85, modelo: "911 GT3", ano_modelo: 2024, preco_usd: 224000, km_milhas: 3000, pagamento: "Wire Transfer", cidade: "Boise", estado: "ID", status_original: "Awaiting Delivery", familia: "911", status: "Aguardando"},
+            {id: 86, modelo: "911 Carrera", ano_modelo: 2024, preco_usd: 126900, km_milhas: 7200, pagamento: "Credit Card", cidade: "Orlando", estado: "FL", status_original: "Delivered", familia: "911", status: "Entregue"},
+            {id: 87, modelo: "Cayenne", ano_modelo: 2023, preco_usd: 84500, km_milhas: 21400, pagamento: "Bank Transfer", cidade: "San Jose", estado: "CA", status_original: "Pending", familia: "Cayenne", status: "Aguardando"},
+            {id: 88, modelo: "Macan S", ano_modelo: 2022, preco_usd: 69800, km_milhas: 26300, pagamento: "Financing", cidade: "Tampa", estado: "FL", status_original: "Delivered", familia: "Macan", status: "Entregue"},
+            {id: 89, modelo: "Taycan 4S", ano_modelo: 2025, preco_usd: 132700, km_milhas: 0, pagamento: "Wire Transfer", cidade: "Denver", estado: "CO", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 90, modelo: "Panamera", ano_modelo: 2021, preco_usd: 81000, km_milhas: 42, pagamento: "Cash", cidade: "Austin", estado: "TX", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 91, modelo: "718 Cayman", ano_modelo: 2023, preco_usd: 78900, km_milhas: 17500, pagamento: "Debit Card", cidade: "Seattle", estado: "WA", status_original: "Cancelled", familia: "718", status: "Cancelada"},
+            {id: 92, modelo: "911 Turbo S", ano_modelo: 2026, preco_usd: 249300, km_milhas: 900, pagamento: "Wire Transfer", cidade: "Boston", estado: "MA", status_original: "Awaiting Delivery", familia: "911", status: "Aguardando"},
+            {id: 93, modelo: "Cayenne Coupe", ano_modelo: 2024, preco_usd: 108750, km_milhas: 5530, pagamento: "Wire Transfer", cidade: "Phoenix", estado: "AZ", status_original: "Pending Approval", familia: "Cayenne", status: "Aguardando"},
+            {id: 94, modelo: "Macan Electric", ano_modelo: 2026, preco_usd: 92600, km_milhas: 0, pagamento: "Financing", cidade: "Chicago", estado: "IL", status_original: "Shipped", familia: "Macan", status: "Em trânsito"},
+            {id: 95, modelo: "Taycan Turbo", ano_modelo: 2025, preco_usd: 164000, km_milhas: 0, pagamento: "ACH Payment", cidade: "Dallas", estado: "TX", status_original: "In Transit", familia: "Taycan", status: "Em trânsito"},
+            {id: 96, modelo: "Panamera 4S", ano_modelo: 2024, preco_usd: 119000, km_milhas: 13400, pagamento: "Credit Card", cidade: "San Francisco", estado: "CA", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 97, modelo: "911 GT3", ano_modelo: 2026, preco_usd: 232500, km_milhas: 1700, pagamento: "Wire Transfer", cidade: "Las Vegas", estado: "NV", status_original: "Pending", familia: "911", status: "Aguardando"},
+            {id: 98, modelo: "Cayenne E-Hybrid", ano_modelo: 2023, preco_usd: 96800, km_milhas: 14000, pagamento: "Lease", cidade: "Charlotte", estado: "NC", status_original: "Delivered", familia: "Cayenne", status: "Entregue"},
+            {id: 99, modelo: "Macan T", ano_modelo: 2022, preco_usd: 74400, km_milhas: 20750, pagamento: "Cash", cidade: "Mesa", estado: "AZ", status_original: "Awaiting Pickup", familia: "Macan", status: "Aguardando"},
+            {id: 100, modelo: "Taycan GTS", ano_modelo: 2025, preco_usd: 148500, km_milhas: 5200, pagamento: "Crypto Payment", cidade: "Atlanta", estado: "GA", status_original: "Delivered", familia: "Taycan", status: "Entregue"},
+            {id: 101, modelo: "718 Boxster", ano_modelo: 2021, preco_usd: 71900, km_milhas: 29600, pagamento: "Bank Transfer", cidade: "Long Beach", estado: "CA", status_original: "Pending", familia: "718", status: "Aguardando"},
+            {id: 102, modelo: "911 Targa 4", ano_modelo: 2024, preco_usd: 143250, km_milhas: 3100, pagamento: "Financing", cidade: "Oakland", estado: "CA", status_original: "In Transit", familia: "911", status: "Em trânsito"},
+            {id: 103, modelo: "Panamera Turbo", ano_modelo: 2020, preco_usd: 137500, km_milhas: 48000, pagamento: "Wire Transfer", cidade: "Tulsa", estado: "OK", status_original: "Delivered", familia: "Panamera", status: "Entregue"},
+            {id: 104, modelo: "Cayenne Turbo GT", ano_modelo: 2025, preco_usd: 204800, km_milhas: 3300, pagamento: "Credit Card", cidade: "Wichita", estado: "KS", status_original: "Pending", familia: "Cayenne", status: "Aguardando"},
+            {id: 105, modelo: "911 Dakar", ano_modelo: 2024, preco_usd: 271700, km_milhas: 1050, pagamento: "Lease", cidade: "New Orleans", estado: "LA", status_original: "Delivered", familia: "911", status: "Entregue"}
+        ];
+
+        // Inicialização dos Filtros
+        function initFilters() {
+            const familias = [...new Set(rawData.map(item => item.familia))].sort();
+            const estados = [...new Set(rawData.map(item => item.estado))].sort();
+            const anos = [...new Set(rawData.map(item => item.ano_modelo))].sort((a,b) => a - b);
+            const pagamentos = [...new Set(rawData.map(item => item.pagamento))].sort();
+            const entregas = [...new Set(rawData.map(item => item.status))].sort();
+
+            populateSelect('filter-familia', familias);
+            populateSelect('filter-estado', estados);
+            populateSelect('filter-ano', anos);
+            populateSelect('filter-pagamento', pagamentos);
+            populateSelect('filter-entrega', entregas);
+        }
+
+        function populateSelect(elementId, values) {
+            const select = document.getElementById(elementId);
+            values.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                select.appendChild(opt);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-familia').value = '';
+            document.getElementById('filter-estado').value = '';
+            document.getElementById('filter-ano').value = '';
+            document.getElementById('filter-pagamento').value = '';
+            document.getElementById('filter-entrega').value = '';
+            updateDashboard();
+        }
+
+        // Formatador de Dólar (ex: US$ 4,3 mi)
+        function formatUSD(val) {
+            if (val >= 1000000) {
+                return 'US$ ' + (val / 1000000).toFixed(1).replace('.', ',') + ' mi';
+            } else if (val >= 1000) {
+                return 'US$ ' + (val / 1000).toFixed(0) + ' mil';
+            } else {
+                return 'US$ ' + val.toLocaleString('en-US');
+            }
+        }
+
+        function formatUSDExact(val) {
+            return 'US$ ' + val.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        // Atualização Principal da Dashboard
+        function updateDashboard() {
+            const fFamilia = document.getElementById('filter-familia').value;
+            const fEstado = document.getElementById('filter-estado').value;
+            const fAno = document.getElementById('filter-ano').value;
+            const fPagamento = document.getElementById('filter-pagamento').value;
+            const fEntrega = document.getElementById('filter-entrega').value;
+
+            // Filtragem combinada
+            const filtered = rawData.filter(item => {
+                return (!fFamilia || item.familia === fFamilia) &&
+                       (!fEstado || item.estado === fEstado) &&
+                       (!fAno || item.ano_modelo == fAno) &&
+                       (!fPagamento || item.pagamento === fPagamento) &&
+                       (!fEntrega || item.status === fEntrega);
+            });
+
+            // 1. KPIs
+            const totalVendas = filtered.length;
+            const receitaTotal = filtered.reduce((acc, item) => acc + item.preco_usd, 0);
+            const ticketMedio = totalVendas > 0 ? receitaTotal / totalVendas : 0;
+            // Receita ainda não entregue (status != 'Entregue')
+            const naoEntregue = filtered
+                .filter(item => item.status !== 'Entregue')
+                .reduce((acc, item) => acc + item.preco_usd, 0);
+
+            document.getElementById('kpi-vendas').textContent = totalVendas;
+            document.getElementById('kpi-receita').textContent = formatUSD(receitaTotal);
+            document.getElementById('kpi-ticket').textContent = formatUSD(ticketMedio);
+            document.getElementById('kpi-pendente').textContent = formatUSD(naoEntregue);
+
+            // 2. Gráfico 1: Famílias por Receita
+            renderFamiliaChart(filtered, receitaTotal);
+
+            // 3. Gráfico 2: Estados por Receita
+            renderEstadoChart(filtered, receitaTotal);
+
+            // 4. Gráfico 3: Status de Entrega por Receita
+            renderEntregaChart(filtered, receitaTotal);
+
+            // 5. Tabela
+            renderTable(filtered);
+        }
+
+        function renderFamiliaChart(filtered, totalRevenue) {
+            const container = document.getElementById('chart-familia-bars');
+            const insight = document.getElementById('insight-familia');
+            container.innerHTML = '';
+
+            const grouped = {};
+            filtered.forEach(item => {
+                grouped[item.familia] = (grouped[item.familia] || 0) + item.preco_usd;
+            });
+
+            const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Nenhum dado encontrado.</div>';
+                insight.textContent = "Nenhum registro para os filtros selecionados.";
+                return;
+            }
+
+            const topFamilia = sorted[0];
+            const pctTop = totalRevenue > 0 ? ((topFamilia[1] / totalRevenue) * 100).toFixed(1) : 0;
+            insight.textContent = `A família ${topFamilia[0]} lidera a receita com ${formatUSD(topFamilia[1])} (${pctTop}% do total).`;
+
+            const maxVal = sorted[0][1] || 1;
+
+            sorted.forEach(([familia, val]) => {
+                const pct = (val / maxVal) * 100;
+                const row = document.createElement('div');
+                row.className = 'bar-row';
+                row.innerHTML = `
+                    <div class="bar-meta">
+                        <span><strong>${familia}</strong></span>
+                        <span>${formatUSD(val)}</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${pct}%"></div>
+                        <span class="bar-label-direct">${formatUSD(val)}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function renderEstadoChart(filtered, totalRevenue) {
+            const container = document.getElementById('chart-estado-bars');
+            const insight = document.getElementById('insight-estado');
+            container.innerHTML = '';
+
+            const grouped = {};
+            filtered.forEach(item => {
+                grouped[item.estado] = (grouped[item.estado] || 0) + item.preco_usd;
+            });
+
+            const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5); // Top 5 estados
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Nenhum dado encontrado.</div>';
+                insight.textContent = "Nenhum registro para os filtros selecionados.";
+                return;
+            }
+
+            const topEstado = sorted[0];
+            const pctTop = totalRevenue > 0 ? ((topEstado[1] / totalRevenue) * 100).toFixed(1) : 0;
+            insight.textContent = `O estado de ${topEstado[0]} concentra o maior volume com ${formatUSD(topEstado[1])} (${pctTop}% do total).`;
+
+            const maxVal = sorted[0][1] || 1;
+
+            sorted.forEach(([estado, val]) => {
+                const pct = (val / maxVal) * 100;
+                const row = document.createElement('div');
+                row.className = 'bar-row';
+                row.innerHTML = `
+                    <div class="bar-meta">
+                        <span><strong>${estado}</strong></span>
+                        <span>${formatUSD(val)}</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${pct}%"></div>
+                        <span class="bar-label-direct">${formatUSD(val)}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function renderEntregaChart(filtered, totalRevenue) {
+            const container = document.getElementById('chart-entrega-bars');
+            const insight = document.getElementById('insight-entrega');
+            container.innerHTML = '';
+
+            const grouped = {};
+            filtered.forEach(item => {
+                grouped[item.status] = (grouped[item.status] || 0) + item.preco_usd;
+            });
+
+            const sorted = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Nenhum dado encontrado.</div>';
+                insight.textContent = "Nenhum registro para os filtros selecionados.";
+                return;
+            }
+
+            const entregueVal = grouped['Entregue'] || 0;
+            const pctEntregue = totalRevenue > 0 ? ((entregueVal / totalRevenue) * 100).toFixed(1) : 0;
+            insight.textContent = `Um total de ${formatUSD(entregueVal)} (${pctEntregue}% da receita) já foi efetivamente entregue aos clientes.`;
+
+            const maxVal = sorted[0][1] || 1;
+
+            sorted.forEach(([status, val]) => {
+                const pct = (val / maxVal) * 100;
+                const row = document.createElement('div');
+                row.className = 'bar-row';
+                row.innerHTML = `
+                    <div class="bar-meta">
+                        <span><strong>${status}</strong></span>
+                        <span>${formatUSD(val)}</span>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width: ${pct}%"></div>
+                        <span class="bar-label-direct">${formatUSD(val)}</span>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function renderTable(filtered) {
+            const tbody = document.getElementById('table-body');
+            document.getElementById('table-count').textContent = filtered.length;
+            tbody.innerHTML = '';
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.modelo}</td>
+                    <td>${item.familia}</td>
+                    <td>${item.ano_modelo}</td>
+                    <td>${formatUSDExact(item.preco_usd)}</td>
+                    <td>${item.km_milhas.toLocaleString('en-US')}</td>
+                    <td>${item.pagamento}</td>
+                    <td>${item.cidade}</td>
+                    <td>${item.estado}</td>
+                    <td>${item.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Inicializar aplicação
+        window.onload = () => {
+            initFilters();
+            updateDashboard();
+        };
+    </script>
+</body>
+</html>

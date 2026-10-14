@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendas Porsche</title>
+<meta name="description" content="Dashboard interativa com 100 vendas Porsche: receita por família, concentração por estado e situação das entregas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0b09;
+  --surface:#15130f;
+  --line:#2b2619;
+  --line-soft:#1e1b13;
+  --ink:#f3ecdb;
+  --ink-2:#bdb399;
+  --ink-3:#8f866f;
+  --gold:#d4b26e;
+  --gold-hi:#ecd196;
+  --gold-mid:#a98f56;
+  --gold-low:#6f6240;
+  --red:#c0594b;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --sans:"Jost","Helvetica Neue",Arial,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+button,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px}
+
+/* Topo */
+.top{position:relative;overflow:hidden;border-bottom:1px solid var(--line);background:radial-gradient(720px 400px at 80% 52%,rgba(212,178,110,.14),transparent 70%)}
+.top .art{position:absolute;right:-90px;top:50%;width:780px;max-width:none;height:auto;transform:translateY(-50%);pointer-events:none}
+.photo{position:absolute;inset:0;pointer-events:none}
+.photo img{width:100%;height:100%;object-fit:cover;opacity:.34;-webkit-mask-image:linear-gradient(90deg,transparent 15%,#000 85%);mask-image:linear-gradient(90deg,transparent 15%,#000 85%)}
+.hero{position:relative;z-index:1;padding-block:68px 60px;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+.hero h1{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(44px,7vw,84px);line-height:.95;letter-spacing:-.01em}
+.hero h1 span{display:block;color:var(--gold)}
+.hero p{margin:20px 0 0;max-width:46ch;color:var(--ink-2);font-size:17px}
+.total{margin-top:34px;padding-top:22px;border-top:1px solid var(--line);max-width:30rem}
+.total .big{font-family:var(--serif);font-variant-numeric:lining-nums;font-weight:500;font-size:clamp(46px,6vw,76px);line-height:1;color:var(--gold-hi)}
+.total .cap{margin-top:8px;color:var(--ink-2);font-size:15px}
+.gauge{margin:0;justify-self:end;width:min(100%,400px)}
+.gauge svg{display:block;width:100%;height:auto;overflow:visible}
+.gauge figcaption{margin-top:6px;text-align:center;color:var(--ink-2);font-size:15px}
+#g-prog{transition:stroke-dasharray .7s cubic-bezier(.3,.7,.2,1)}
+#g-needle{transform-origin:150px 150px;transition:transform .7s cubic-bezier(.3,.7,.2,1)}
+
+/* Filtros */
+.filters{position:sticky;top:0;z-index:5;background:rgba(12,11,9,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.filters .wrap{display:flex;flex-wrap:wrap;gap:14px 18px;align-items:end;padding-top:14px;padding-bottom:14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:150px;flex:1 1 150px;max-width:220px}
+.field label{font-size:13px;color:var(--ink-3)}
+.field select{appearance:none;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23d4b26e' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center;border:1px solid var(--line);border-radius:6px;padding:9px 34px 9px 12px;cursor:pointer;transition:border-color .15s}
+.field select:hover{border-color:var(--gold-low)}
+.field select.on{border-color:var(--gold);color:var(--gold-hi)}
+.reset{margin-left:auto;background:none;border:0;color:var(--gold);cursor:pointer;padding:9px 4px;text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--gold-low)}
+.reset[disabled]{color:var(--ink-3);cursor:default;text-decoration:none}
+
+/* Indicadores */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+.kpi{padding:30px 24px 28px 0}
+.kpi + .kpi{padding-left:24px;border-left:1px solid var(--line)}
+.kpi .v{font-family:var(--serif);font-variant-numeric:lining-nums;font-weight:500;font-size:clamp(28px,3.1vw,40px);line-height:1.05;white-space:nowrap}
+.kpi .l{margin-top:6px;color:var(--ink-2);font-size:15px}
+.kpi .n{margin-top:2px;color:var(--ink-3);font-size:13px}
+
+/* Perguntas */
+.q{padding:52px 0 8px}
+.q h2{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(28px,3.4vw,38px);line-height:1.1}
+.q .ins{margin:10px 0 26px;max-width:62ch;color:var(--ink-2);min-height:3em}
+.q .ins b{color:var(--gold-hi);font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:104px 1fr 116px;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:7px 8px;margin:0 -8px;cursor:pointer;transition:background .15s}
+.row:hover{background:var(--surface)}
+.row .nm{color:var(--ink);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .trk{display:block;height:14px}
+.row .fill{display:block;height:100%;min-width:3px;border-radius:0 4px 4px 0;background:var(--c,var(--gold));transition:width .35s ease,opacity .2s}
+.row .val{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-size:15px;line-height:1.2}
+.row .val small{display:block;color:var(--ink-3);font-size:12.5px}
+.rows.has-sel .row:not(.sel) .fill{opacity:.38}
+.row.sel{background:var(--surface);box-shadow:inset 2px 0 0 var(--gold-hi)}
+.row.static{cursor:default}
+.hint{margin-top:14px;color:var(--ink-3);font-size:13px}
+.sub{margin:40px 0 6px;font-family:var(--serif);font-weight:500;font-size:24px;color:var(--gold)}
+.top5{list-style:none;margin:0;padding:0}
+.top5 li{display:grid;grid-template-columns:22px 1fr auto;gap:14px;align-items:baseline;padding:11px 0;border-top:1px solid var(--line-soft)}
+.top5 .rk{color:var(--ink-3);font-variant-numeric:tabular-nums;font-size:14px}
+.top5 .mn{color:var(--ink)}
+.top5 .mn small{display:block;color:var(--ink-3);font-size:13px}
+.top5 .mv{text-align:right;font-variant-numeric:tabular-nums}
+.strip{display:flex;gap:2px;height:14px;margin:0 0 22px;border-radius:3px;overflow:hidden}
+.strip i{display:block;background:var(--c);min-width:2px;transition:flex-basis .35s ease}
+.empty{padding:36px 0;color:var(--ink-2)}
+
+/* Tabela */
+details{margin:56px 0 0;border-top:1px solid var(--line);padding:22px 0}
+summary{cursor:pointer;color:var(--gold);font-family:var(--serif);font-size:24px;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"  +";color:var(--ink-3)}
+details[open] summary::after{content:"  −"}
+.tbl{margin-top:18px;max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{padding:9px 14px;text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface);color:var(--ink-3);font-weight:400;font-size:13px;border-bottom:1px solid var(--line)}
+td{border-bottom:1px solid var(--line-soft)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+footer{margin-top:40px;border-top:1px solid var(--line);padding:26px 0 56px;color:var(--ink-3);font-size:14px}
+footer p{margin:0 0 8px;max-width:78ch}
+
+/* Dica flutuante */
+#tip{position:fixed;z-index:20;pointer-events:none;background:#1b1810;border:1px solid var(--gold-low);border-radius:6px;padding:10px 12px;font-size:13.5px;line-height:1.45;max-width:260px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+#tip.show{opacity:1;transform:none}
+#tip strong{display:block;font-family:var(--serif);font-weight:600;font-size:18px;color:var(--gold-hi);margin-bottom:2px}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-block:44px 36px;gap:28px}
+  .gauge{justify-self:center;width:min(100%,340px)}
+  .top .art{right:-300px;opacity:.6}
+  .grid2{grid-template-columns:1fr;gap:20px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi{padding:22px 16px 20px 0}
+  .kpi:nth-child(odd){padding-left:0;border-left:0}
+  .kpi:nth-child(n+3){border-top:1px solid var(--line)}
+  .filters{position:static}
+  .field{max-width:none;min-width:calc(50% - 10px)}
+  .reset{margin-left:0}
+}
+@media (max-width:520px){
+  .wrap{padding:0 16px}
+  .row{grid-template-columns:92px 1fr 108px;gap:10px}
+  .kpi .v{white-space:normal}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="photo"><img src="imagens/hero.jpg" alt="" onerror="this.parentNode.remove()"></div>
+  <svg class="art" viewBox="0 0 780 780" aria-hidden="true" fill="none" stroke="#d4b26e">
+    <circle cx="390" cy="390" r="120" stroke-opacity=".30"/>
+    <circle cx="390" cy="390" r="170" stroke-opacity=".22"/>
+    <circle cx="390" cy="390" r="230" stroke-opacity=".16"/>
+    <circle cx="390" cy="390" r="300" stroke-opacity=".11"/>
+    <circle cx="390" cy="390" r="372" stroke-opacity=".07"/>
+    <line x1="390" y1="10" x2="390" y2="770" stroke-opacity=".08"/>
+    <line x1="10" y1="390" x2="770" y2="390" stroke-opacity=".08"/>
+  </svg>
+  <header class="wrap hero">
+    <div class="hl">
+      <h1>Vendas <span>Porsche</span></h1>
+      <p>Cem vendas nos Estados Unidos, organizadas para responder três perguntas: o que rende mais, onde rende e quanto ainda falta entregar.</p>
+      <div class="total" aria-live="polite">
+        <div class="big" id="heroTotal"></div>
+        <div class="cap" id="heroCap"></div>
+      </div>
+    </div>
+    <figure class="gauge">
+      <svg id="gauge" viewBox="0 0 300 210" role="img" aria-label="Medidor da receita entregue"></svg>
+      <figcaption id="gaugeCap"></figcaption>
+    </figure>
+  </header>
+</div>
+
+<form class="filters" aria-label="Filtros" onsubmit="return false">
+  <div class="wrap">
+    <div class="field"><label for="f-familia">Família</label><select id="f-familia" data-k="familia"></select></div>
+    <div class="field"><label for="f-estado">Estado</label><select id="f-estado" data-k="estado"></select></div>
+    <div class="field"><label for="f-ano">Ano do modelo</label><select id="f-ano" data-k="ano"></select></div>
+    <div class="field"><label for="f-pagamento">Pagamento</label><select id="f-pagamento" data-k="pagamento"></select></div>
+    <div class="field"><label for="f-status">Entrega</label><select id="f-status" data-k="status"></select></div>
+    <button type="button" class="reset" id="reset">Limpar filtros</button>
+  </div>
+</form>
+
+<div class="wrap">
+  <section class="kpis" aria-label="Indicadores" aria-live="polite">
+    <div class="kpi"><div class="v" id="k-vendas"></div><div class="l">Vendas</div><div class="n" id="k-vendas-n"></div></div>
+    <div class="kpi"><div class="v" id="k-receita"></div><div class="l">Receita</div><div class="n" id="k-receita-n"></div></div>
+    <div class="kpi"><div class="v" id="k-ticket"></div><div class="l">Ticket médio</div><div class="n" id="k-ticket-n"></div></div>
+    <div class="kpi"><div class="v" id="k-pend"></div><div class="l">Receita ainda não entregue</div><div class="n" id="k-pend-n"></div></div>
+  </section>
+
+  <div class="grid2">
+    <section class="q" aria-labelledby="q1t">
+      <h2 id="q1t">Quais famílias geram mais receita?</h2>
+      <p class="ins" id="q1i"></p>
+      <div class="rows" id="q1"></div>
+      <p class="hint">Clique em uma barra para filtrar. A barra mostra receita, não unidades.</p>
+      <h3 class="sub" id="q1mt">Os cinco modelos que mais faturam</h3>
+      <ol class="top5" id="q1m"></ol>
+    </section>
+    <section class="q" aria-labelledby="q2t">
+      <h2 id="q2t">Onde a receita se concentra?</h2>
+      <p class="ins" id="q2i"></p>
+      <div class="rows" id="q2"></div>
+      <p class="hint" id="q2h"></p>
+    </section>
+  </div>
+
+  <section class="q" aria-labelledby="q3t">
+    <h2 id="q3t">Quanto da receita já foi entregue?</h2>
+    <p class="ins" id="q3i"></p>
+    <div class="strip" id="q3s" aria-hidden="true"></div>
+    <div class="rows" id="q3"></div>
+    <p class="hint">Em trânsito reúne In Transit e Shipped. Aguardando reúne Pending, aprovação, revisão, retirada e entrega.</p>
+  </section>
+
+  <details>
+    <summary>Ver as vendas em tabela</summary>
+    <div class="tbl" tabindex="0" role="region" aria-label="Tabela de vendas filtradas">
+      <table>
+        <thead><tr><th>Venda</th><th>Modelo</th><th class="num">Ano</th><th>Estado</th><th>Pagamento</th><th>Entrega</th><th class="num">Preço</th></tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <footer>
+    <p>Base: 100 vendas da planilha Porsche sanitizada. Valores em dólares americanos.</p>
+    <p>Tratamento: só as colunas sanitizadas, preço e ano como número, modelos agrupados em seis famílias e dez status de entrega em quatro grupos. Nomes de clientes e vendedores ficaram de fora.</p>
+    <p>A data da venda não entra nos gráficos porque 24 das 100 datas ficaram INVALID na sanitização.</p>
+  </footer>
+</div>
+
+<div id="tip" role="tooltip"></div>
+
+<script>
+const VENDAS = [{"id":6,"familia":"718","modelo":"718 Cayman","ano_modelo":2022,"preco_usd":79500,"pagamento":"Credit Card","estado":"MA","status":"Entregue"},{"id":7,"familia":"911","modelo":"911 Turbo S","ano_modelo":2024,"preco_usd":235000,"pagamento":"Wire Transfer","estado":"WA","status":"Entregue"},{"id":8,"familia":"Cayenne","modelo":"Cayenne Coupe","ano_modelo":2023,"preco_usd":112750,"pagamento":"Financing","estado":"TX","status":"Em trânsito"},{"id":9,"familia":"Macan","modelo":"Macan S","ano_modelo":2021,"preco_usd":68900,"pagamento":"Cash","estado":"CO","status":"Aguardando"},{"id":10,"familia":"Taycan","modelo":"Taycan 4S","ano_modelo":2024,"preco_usd":121000,"pagamento":"Bank Transfer","estado":"CA","status":"Entregue"},{"id":11,"familia":"Panamera","modelo":"Panamera 4","ano_modelo":2023,"preco_usd":104500,"pagamento":"Credit Card","estado":"FL","status":"Cancelada"},{"id":12,"familia":"911","modelo":"911 Carrera S","ano_modelo":2020,"preco_usd":96300,"pagamento":"Lease","estado":"NY","status":"Entregue"},{"id":13,"familia":"Cayenne","modelo":"Cayenne E-Hybrid","ano_modelo":2022,"preco_usd":89750,"pagamento":"Wire Transfer","estado":"CA","status":"Aguardando"},{"id":14,"familia":"718","modelo":"718 Boxster","ano_modelo":2021,"preco_usd":73500,"pagamento":"Debit Card","estado":"IL","status":"Em trânsito"},{"id":15,"familia":"Macan","modelo":"Macan GTS","ano_modelo":2024,"preco_usd":95000,"pagamento":"Financing","estado":"AZ","status":"Em trânsito"},{"id":16,"familia":"Taycan","modelo":"Taycan Turbo","ano_modelo":2023,"preco_usd":153200,"pagamento":"ACH Payment","estado":"TX","status":"Entregue"},{"id":17,"familia":"911","modelo":"911 GT3","ano_modelo":2024,"preco_usd":241000,"pagamento":"Wire Transfer","estado":"NV","status":"Aguardando"},{"id":18,"familia":"Panamera","modelo":"Panamera Turbo S","ano_modelo":2022,"preco_usd":132000,"pagamento":"Cash","estado":"CA","status":"Entregue"},{"id":19,"familia":"Cayenne","modelo":"Cayenne Turbo GT","ano_modelo":2024,"preco_usd":188000,"pagamento":"Crypto Payment","estado":"TX","status":"Aguardando"},{"id":20,"familia":"911","modelo":"911 Carrera Cabriolet","ano_modelo":2023,"preco_usd":127800,"pagamento":"Credit Card","estado":"GA","status":"Entregue"},{"id":21,"familia":"Macan","modelo":"Macan","ano_modelo":2021,"preco_usd":58900,"pagamento":"Bank Transfer","estado":"FL","status":"Aguardando"},{"id":22,"familia":"718","modelo":"718 Spyder RS","ano_modelo":2024,"preco_usd":164000,"pagamento":"Financing","estado":"OR","status":"Em trânsito"},{"id":23,"familia":"Taycan","modelo":"Taycan Cross Turismo","ano_modelo":2023,"preco_usd":118500,"pagamento":"Wire Transfer","estado":"NC","status":"Entregue"},{"id":24,"familia":"Cayenne","modelo":"Cayenne S","ano_modelo":2022,"preco_usd":91300,"pagamento":"Credit Card","estado":"TN","status":"Aguardando"},{"id":25,"familia":"911","modelo":"911 Targa 4S","ano_modelo":2024,"preco_usd":158750,"pagamento":"Lease","estado":"MN","status":"Entregue"},{"id":26,"familia":"Panamera","modelo":"Panamera","ano_modelo":2020,"preco_usd":72000,"pagamento":"Bank Transfer","estado":"PA","status":"Cancelada"},{"id":27,"familia":"Macan","modelo":"Macan Electric","ano_modelo":2025,"preco_usd":86500,"pagamento":"Wire Transfer","estado":"TX","status":"Entregue"},{"id":28,"familia":"911","modelo":"911 Dakar","ano_modelo":2024,"preco_usd":270000,"pagamento":"Cash","estado":"UT","status":"Aguardando"},{"id":29,"familia":"Taycan","modelo":"Taycan GTS","ano_modelo":2023,"preco_usd":139000,"pagamento":"Financing","estado":"NC","status":"Em trânsito"},{"id":30,"familia":"Cayenne","modelo":"Cayenne","ano_modelo":2021,"preco_usd":76800,"pagamento":"Credit Card","estado":"MI","status":"Entregue"},{"id":31,"familia":"718","modelo":"718 Cayman GT4 RS","ano_modelo":2024,"preco_usd":173600,"pagamento":"Wire Transfer","estado":"OH","status":"Aguardando"},{"id":32,"familia":"911","modelo":"911 Carrera GTS","ano_modelo":2022,"preco_usd":119900,"pagamento":"Cash","estado":"IN","status":"Entregue"},{"id":33,"familia":"Panamera","modelo":"Panamera 4 E-Hybrid","ano_modelo":2023,"preco_usd":109250,"pagamento":"Lease","estado":"TX","status":"Em trânsito"},{"id":34,"familia":"Macan","modelo":"Macan T","ano_modelo":2022,"preco_usd":82000,"pagamento":"Wire Transfer","estado":"FL","status":"Entregue"},{"id":35,"familia":"Taycan","modelo":"Taycan Turbo S","ano_modelo":2025,"preco_usd":214000,"pagamento":"Crypto Payment","estado":"CA","status":"Aguardando"},{"id":36,"familia":"911","modelo":"911 Carrera","ano_modelo":2024,"preco_usd":124500,"pagamento":"Credit Card","estado":"FL","status":"Entregue"},{"id":37,"familia":"Cayenne","modelo":"Cayenne S","ano_modelo":2023,"preco_usd":98200,"pagamento":"Bank Transfer","estado":"CA","status":"Aguardando"},{"id":38,"familia":"Macan","modelo":"Macan","ano_modelo":2022,"preco_usd":67500,"pagamento":"Financing","estado":"OH","status":"Entregue"},{"id":39,"familia":"Taycan","modelo":"Taycan","ano_modelo":2025,"preco_usd":116900,"pagamento":"Wire Transfer","estado":"WI","status":"Em trânsito"},{"id":40,"familia":"Panamera","modelo":"Panamera 4S","ano_modelo":2024,"preco_usd":112000,"pagamento":"Cash","estado":"MO","status":"Entregue"},{"id":41,"familia":"718","modelo":"718 Boxster","ano_modelo":2021,"preco_usd":74000,"pagamento":"Debit Card","estado":"NE","status":"Cancelada"},{"id":42,"familia":"911","modelo":"911 Turbo","ano_modelo":2024,"preco_usd":198300,"pagamento":"Wire Transfer","estado":"NM","status":"Aguardando"},{"id":43,"familia":"Cayenne","modelo":"Cayenne Coupe","ano_modelo":2023,"preco_usd":103750,"pagamento":"Wire Transfer","estado":"AZ","status":"Aguardando"},{"id":44,"familia":"Macan","modelo":"Macan GTS","ano_modelo":2024,"preco_usd":93600,"pagamento":"Financing","estado":"CA","status":"Em trânsito"},{"id":45,"familia":"Taycan","modelo":"Taycan 4S","ano_modelo":2025,"preco_usd":129000,"pagamento":"ACH Payment","estado":"VA","status":"Em trânsito"},{"id":46,"familia":"Panamera","modelo":"Panamera Turbo","ano_modelo":2022,"preco_usd":136000,"pagamento":"Credit Card","estado":"CO","status":"Entregue"},{"id":47,"familia":"911","modelo":"911 GT3 RS","ano_modelo":2024,"preco_usd":286500,"pagamento":"Wire Transfer","estado":"TX","status":"Aguardando"},{"id":48,"familia":"Cayenne","modelo":"Cayenne E-Hybrid","ano_modelo":2023,"preco_usd":92800,"pagamento":"Lease","estado":"CA","status":"Entregue"},{"id":49,"familia":"Macan","modelo":"Macan T","ano_modelo":2022,"preco_usd":72400,"pagamento":"Cash","estado":"AZ","status":"Aguardando"},{"id":50,"familia":"Taycan","modelo":"Taycan Turbo","ano_modelo":2025,"preco_usd":158500,"pagamento":"Crypto Payment","estado":"GA","status":"Entregue"},{"id":51,"familia":"718","modelo":"718 Cayman","ano_modelo":2021,"preco_usd":69900,"pagamento":"Bank Transfer","estado":"CA","status":"Aguardando"},{"id":52,"familia":"911","modelo":"911 Targa 4","ano_modelo":2024,"preco_usd":141250,"pagamento":"Financing","estado":"CA","status":"Em trânsito"},{"id":53,"familia":"Panamera","modelo":"Panamera","ano_modelo":2020,"preco_usd":71500,"pagamento":"Wire Transfer","estado":"OK","status":"Entregue"},{"id":54,"familia":"Cayenne","modelo":"Cayenne Turbo","ano_modelo":2023,"preco_usd":146800,"pagamento":"Credit Card","estado":"KS","status":"Aguardando"},{"id":55,"familia":"Macan","modelo":"Macan Electric","ano_modelo":2025,"preco_usd":89700,"pagamento":"Lease","estado":"LA","status":"Entregue"},{"id":56,"familia":"911","modelo":"911 Carrera S","ano_modelo":2022,"preco_usd":104600,"pagamento":"Bank Transfer","estado":"HI","status":"Cancelada"},{"id":57,"familia":"Taycan","modelo":"Taycan GTS","ano_modelo":2024,"preco_usd":142000,"pagamento":"Wire Transfer","estado":"CA","status":"Entregue"},{"id":58,"familia":"Cayenne","modelo":"Cayenne","ano_modelo":2021,"preco_usd":78400,"pagamento":"Cash","estado":"NV","status":"Aguardando"},{"id":59,"familia":"718","modelo":"718 Spyder RS","ano_modelo":2025,"preco_usd":169000,"pagamento":"Financing","estado":"KY","status":"Em trânsito"},{"id":60,"familia":"911","modelo":"911 Dakar","ano_modelo":2024,"preco_usd":268900,"pagamento":"Credit Card","estado":"CA","status":"Entregue"},{"id":61,"familia":"Panamera","modelo":"Panamera 4","ano_modelo":2023,"preco_usd":101300,"pagamento":"Wire Transfer","estado":"TX","status":"Aguardando"},{"id":62,"familia":"Macan","modelo":"Macan S","ano_modelo":2021,"preco_usd":66750,"pagamento":"Cash","estado":"MO","status":"Entregue"},{"id":63,"familia":"Taycan","modelo":"Taycan Cross Turismo","ano_modelo":2024,"preco_usd":127900,"pagamento":"Lease","estado":"PA","status":"Em trânsito"},{"id":64,"familia":"Cayenne","modelo":"Cayenne Turbo GT","ano_modelo":2025,"preco_usd":200000,"pagamento":"Wire Transfer","estado":"OH","status":"Entregue"},{"id":65,"familia":"911","modelo":"911 Carrera Cabriolet","ano_modelo":2023,"preco_usd":132000,"pagamento":"Crypto Payment","estado":"AK","status":"Aguardando"},{"id":66,"familia":"718","modelo":"718 Cayman GT4 RS","ano_modelo":2024,"preco_usd":176400,"pagamento":"Credit Card","estado":"TX","status":"Entregue"},{"id":67,"familia":"Panamera","modelo":"Panamera 4 E-Hybrid","ano_modelo":2022,"preco_usd":108500,"pagamento":"Bank Transfer","estado":"NJ","status":"Cancelada"},{"id":68,"familia":"Macan","modelo":"Macan","ano_modelo":2021,"preco_usd":59000,"pagamento":"Financing","estado":"NC","status":"Aguardando"},{"id":69,"familia":"Taycan","modelo":"Taycan Turbo S","ano_modelo":2025,"preco_usd":218000,"pagamento":"Wire Transfer","estado":"NE","status":"Aguardando"},{"id":70,"familia":"Cayenne","modelo":"Cayenne S","ano_modelo":2024,"preco_usd":99950,"pagamento":"Debit Card","estado":"NJ","status":"Entregue"},{"id":71,"familia":"911","modelo":"911 Carrera GTS","ano_modelo":2024,"preco_usd":121750,"pagamento":"Credit Card","estado":"AZ","status":"Entregue"},{"id":72,"familia":"718","modelo":"718 Boxster GTS","ano_modelo":2023,"preco_usd":91500,"pagamento":"Lease","estado":"NV","status":"Em trânsito"},{"id":73,"familia":"Panamera","modelo":"Panamera Turbo S","ano_modelo":2022,"preco_usd":134000,"pagamento":"Wire Transfer","estado":"NY","status":"Em trânsito"},{"id":74,"familia":"Macan","modelo":"Macan GTS","ano_modelo":2024,"preco_usd":96800,"pagamento":"ACH Payment","estado":"NC","status":"Entregue"},{"id":75,"familia":"Taycan","modelo":"Taycan 4S","ano_modelo":2025,"preco_usd":131600,"pagamento":"Wire Transfer","estado":"TX","status":"Aguardando"},{"id":76,"familia":"Cayenne","modelo":"Cayenne E-Hybrid","ano_modelo":2023,"preco_usd":94300,"pagamento":"Cash","estado":"WI","status":"Entregue"},{"id":77,"familia":"911","modelo":"911 Turbo S","ano_modelo":2025,"preco_usd":242000,"pagamento":"Crypto Payment","estado":"TX","status":"Aguardando"},{"id":78,"familia":"718","modelo":"718 Cayman S","ano_modelo":2022,"preco_usd":82750,"pagamento":"Credit Card","estado":"OH","status":"Cancelada"},{"id":79,"familia":"Macan","modelo":"Macan Electric","ano_modelo":2026,"preco_usd":91300,"pagamento":"Wire Transfer","estado":"CA","status":"Entregue"},{"id":80,"familia":"Panamera","modelo":"Panamera","ano_modelo":2021,"preco_usd":79900,"pagamento":"Financing","estado":"TX","status":"Aguardando"},{"id":81,"familia":"Cayenne","modelo":"Cayenne Coupe","ano_modelo":2024,"preco_usd":111000,"pagamento":"Bank Transfer","estado":"TX","status":"Em trânsito"},{"id":82,"familia":"911","modelo":"911 Targa 4S","ano_modelo":2023,"preco_usd":156500,"pagamento":"Cash","estado":"VA","status":"Entregue"},{"id":83,"familia":"Taycan","modelo":"Taycan","ano_modelo":2025,"preco_usd":119900,"pagamento":"Lease","estado":"AZ","status":"Aguardando"},{"id":84,"familia":"Macan","modelo":"Macan T","ano_modelo":2022,"preco_usd":73200,"pagamento":"Wire Transfer","estado":"VA","status":"Entregue"},{"id":85,"familia":"911","modelo":"911 GT3","ano_modelo":2024,"preco_usd":224000,"pagamento":"Wire Transfer","estado":"ID","status":"Aguardando"},{"id":86,"familia":"911","modelo":"911 Carrera","ano_modelo":2024,"preco_usd":126900,"pagamento":"Credit Card","estado":"FL","status":"Entregue"},{"id":87,"familia":"Cayenne","modelo":"Cayenne","ano_modelo":2023,"preco_usd":84500,"pagamento":"Bank Transfer","estado":"CA","status":"Aguardando"},{"id":88,"familia":"Macan","modelo":"Macan S","ano_modelo":2022,"preco_usd":69800,"pagamento":"Financing","estado":"FL","status":"Entregue"},{"id":89,"familia":"Taycan","modelo":"Taycan 4S","ano_modelo":2025,"preco_usd":132700,"pagamento":"Wire Transfer","estado":"CO","status":"Em trânsito"},{"id":90,"familia":"Panamera","modelo":"Panamera","ano_modelo":2021,"preco_usd":81000,"pagamento":"Cash","estado":"TX","status":"Entregue"},{"id":91,"familia":"718","modelo":"718 Cayman","ano_modelo":2023,"preco_usd":78900,"pagamento":"Debit Card","estado":"WA","status":"Cancelada"},{"id":92,"familia":"911","modelo":"911 Turbo S","ano_modelo":2026,"preco_usd":249300,"pagamento":"Wire Transfer","estado":"MA","status":"Aguardando"},{"id":93,"familia":"Cayenne","modelo":"Cayenne Coupe","ano_modelo":2024,"preco_usd":108750,"pagamento":"Wire Transfer","estado":"AZ","status":"Aguardando"},{"id":94,"familia":"Macan","modelo":"Macan Electric","ano_modelo":2026,"preco_usd":92600,"pagamento":"Financing","estado":"IL","status":"Em trânsito"},{"id":95,"familia":"Taycan","modelo":"Taycan Turbo","ano_modelo":2025,"preco_usd":164000,"pagamento":"ACH Payment","estado":"TX","status":"Em trânsito"},{"id":96,"familia":"Panamera","modelo":"Panamera 4S","ano_modelo":2024,"preco_usd":119000,"pagamento":"Credit Card","estado":"CA","status":"Entregue"},{"id":97,"familia":"911","modelo":"911 GT3","ano_modelo":2026,"preco_usd":232500,"pagamento":"Wire Transfer","estado":"NV","status":"Aguardando"},{"id":98,"familia":"Cayenne","modelo":"Cayenne E-Hybrid","ano_modelo":2023,"preco_usd":96800,"pagamento":"Lease","estado":"NC","status":"Entregue"},{"id":99,"familia":"Macan","modelo":"Macan T","ano_modelo":2022,"preco_usd":74400,"pagamento":"Cash","estado":"AZ","status":"Aguardando"},{"id":100,"familia":"Taycan","modelo":"Taycan GTS","ano_modelo":2025,"preco_usd":148500,"pagamento":"Crypto Payment","estado":"GA","status":"Entregue"},{"id":101,"familia":"718","modelo":"718 Boxster","ano_modelo":2021,"preco_usd":71900,"pagamento":"Bank Transfer","estado":"CA","status":"Aguardando"},{"id":102,"familia":"911","modelo":"911 Targa 4","ano_modelo":2024,"preco_usd":143250,"pagamento":"Financing","estado":"CA","status":"Em trânsito"},{"id":103,"familia":"Panamera","modelo":"Panamera Turbo","ano_modelo":2020,"preco_usd":137500,"pagamento":"Wire Transfer","estado":"OK","status":"Entregue"},{"id":104,"familia":"Cayenne","modelo":"Cayenne Turbo GT","ano_modelo":2025,"preco_usd":204800,"pagamento":"Credit Card","estado":"KS","status":"Aguardando"},{"id":105,"familia":"911","modelo":"911 Dakar","ano_modelo":2024,"preco_usd":271700,"pagamento":"Lease","estado":"LA","status":"Entregue"}];
+
+const ORDEM_STATUS = ["Entregue","Em trânsito","Aguardando","Cancelada"];
+const COR_STATUS = {"Entregue":"#e6c680","Em trânsito":"#a98f56","Aguardando":"#7a6a44","Cancelada":"#e0705f"};
+const F = {familia:"",estado:"",ano:"",pagamento:"",status:""};
+const CAMPO = {familia:"familia",estado:"estado",ano:"ano_modelo",pagamento:"pagamento",status:"status"};
+
+const usd = n => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n);
+const usdC = n => "US$ " + new Intl.NumberFormat("pt-BR",{notation:"compact",maximumFractionDigits:2}).format(n);
+const pct = n => new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0,style:"percent"}).format(n);
+const $ = id => document.getElementById(id);
+const soma = a => a.reduce((s,v)=>s+v.preco_usd,0);
+const plural = (n,s,p) => n + " " + (n===1?s:p);
+
+function filtrar(ignorar){
+  return VENDAS.filter(v => Object.keys(F).every(k => k===ignorar || !F[k] || String(v[CAMPO[k]])===F[k]));
+}
+function agrupar(lista, campo){
+  const m = new Map();
+  lista.forEach(v => {
+    const g = m.get(v[campo]) || {nome:v[campo],valor:0,n:0};
+    g.valor += v.preco_usd; g.n++; m.set(v[campo], g);
+  });
+  return [...m.values()];
+}
+
+/* Filtros */
+function montarFiltros(){
+  const opts = {
+    familia:[...new Set(VENDAS.map(v=>v.familia))].sort(),
+    estado:[...new Set(VENDAS.map(v=>v.estado))].sort(),
+    ano:[...new Set(VENDAS.map(v=>v.ano_modelo))].sort((a,b)=>b-a),
+    pagamento:[...new Set(VENDAS.map(v=>v.pagamento))].sort(),
+    status:ORDEM_STATUS
+  };
+  const todos = {familia:"Todas",estado:"Todos",ano:"Todos",pagamento:"Todos",status:"Todas"};
+  document.querySelectorAll(".filters select").forEach(sel => {
+    const k = sel.dataset.k;
+    sel.innerHTML = `<option value="">${todos[k]}</option>` + opts[k].map(o=>`<option value="${o}">${o}</option>`).join("");
+    sel.addEventListener("change", () => { F[k] = sel.value; render(); });
+  });
+  $("reset").addEventListener("click", () => { Object.keys(F).forEach(k=>F[k]=""); render(); });
+}
+function sincronizarFiltros(){
+  document.querySelectorAll(".filters select").forEach(sel => {
+    sel.value = F[sel.dataset.k];
+    sel.classList.toggle("on", !!F[sel.dataset.k]);
+  });
+  $("reset").disabled = !Object.values(F).some(Boolean);
+}
+function alternar(k, valor){ F[k] = F[k]===String(valor) ? "" : String(valor); render(); }
+
+/* Dica flutuante */
+const tip = $("tip");
+function mostrarDica(el, html){
+  tip.innerHTML = html;
+  const r = el.getBoundingClientRect();
+  tip.classList.add("show");
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = Math.min(r.left + r.width*0.5, window.innerWidth - w - 12);
+  x = Math.max(12, x);
+  let y = r.top - h - 8; if (y < 8) y = r.bottom + 8;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const esconderDica = () => tip.classList.remove("show");
+
+/* Barras horizontais */
+function barras(el, linhas, {chave, ativo, cor, base}){
+  const max = Math.max(...linhas.map(l=>l.valor), 1);
+  const total = base || linhas.reduce((s,l)=>s+l.valor,0) || 1;
+  el.classList.toggle("has-sel", !!ativo);
+  el.innerHTML = "";
+  linhas.forEach(l => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "row" + (ativo && String(l.nome)===ativo ? " sel" : "") + (l.fixo ? " static" : "");
+    const c = cor ? cor(l) : "";
+    const marca = l.nome==="Cancelada" ? "× " : "";
+    b.innerHTML = `<span class="nm">${marca}${l.nome}</span>
+      <span class="trk"><span class="fill" style="width:${(l.valor/max*100).toFixed(1)}%;${c?`--c:${c}`:""}"></span></span>
+      <span class="val">${usdC(l.valor)}<small>${plural(l.n,"venda","vendas")}, ${pct(l.valor/total)}</small></span>`;
+    const dica = `<strong>${l.nome}</strong>${usd(l.valor)} em ${plural(l.n,"venda","vendas")}<br>Ticket médio ${usd(l.valor/l.n)}<br>${pct(l.valor/total)} da receita${l.fixo?"":"<br>Clique para filtrar"}`;
+    b.addEventListener("mouseenter", ()=>mostrarDica(b,dica));
+    b.addEventListener("focus", ()=>mostrarDica(b,dica));
+    b.addEventListener("mouseleave", esconderDica);
+    b.addEventListener("blur", esconderDica);
+    if (l.fixo) b.tabIndex = -1; else b.addEventListener("click", ()=>{ esconderDica(); alternar(chave, l.nome); });
+    el.appendChild(b);
+  });
+}
+function vazio(el, ins){
+  el.innerHTML = `<div class="empty">Nenhuma venda com esses filtros. Use “Limpar filtros” para voltar a ver tudo.</div>`;
+  ins.textContent = "";
+}
+
+/* Medidor */
+const G = {cx:150, cy:150, r:112, L:Math.PI*112};
+function montarMedidor(){
+  const {cx,cy,r} = G;
+  let t = "";
+  for (let i=0;i<=20;i++){
+    const a = Math.PI*(1-i/20), maj = i%5===0, r1 = r+12, r2 = r+(maj?28:20);
+    t += `<line x1="${(cx+r1*Math.cos(a)).toFixed(1)}" y1="${(cy-r1*Math.sin(a)).toFixed(1)}" x2="${(cx+r2*Math.cos(a)).toFixed(1)}" y2="${(cy-r2*Math.sin(a)).toFixed(1)}" stroke="${maj?"#d4b26e":"#6f6240"}" stroke-width="${maj?2:1.2}"/>`;
+  }
+  [[0,"0"],[.5,"50"],[1,"100%"]].forEach(([f,l])=>{
+    const a = Math.PI*(1-f), rr = r+44;
+    t += `<text x="${(cx+rr*Math.cos(a)).toFixed(1)}" y="${(cy-rr*Math.sin(a)+4).toFixed(1)}" text-anchor="middle" fill="#8f866f" font-size="12" font-family="Jost,Arial,sans-serif">${l}</text>`;
+  });
+  const arco = `M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}`;
+  document.getElementById("gauge").innerHTML =
+    `<path d="${arco}" stroke="#2b2619" stroke-width="16" stroke-linecap="round" fill="none"/>
+     <path id="g-prog" d="${arco}" stroke="#ecd196" stroke-width="16" stroke-linecap="round" fill="none" stroke-dasharray="0 ${G.L.toFixed(1)}"/>
+     ${t}
+     <g id="g-needle" style="transform:rotate(0deg)"><line x1="${cx}" y1="${cy}" x2="${cx-r+24}" y2="${cy}" stroke="#d4b26e" stroke-width="3" stroke-linecap="round"/></g>
+     <circle cx="${cx}" cy="${cy}" r="9" fill="#0c0b09" stroke="#d4b26e" stroke-width="2.5"/>
+     <text id="g-pct" x="${cx}" y="${cy+52}" text-anchor="middle" fill="#f3ecdb" font-size="46" font-family="Cormorant Garamond,Georgia,serif" font-weight="500"></text>`;
+}
+function atualizarMedidor(p, tem){
+  const f = tem ? p : 0;
+  document.getElementById("g-prog").setAttribute("stroke-dasharray", `${(G.L*f).toFixed(1)} ${G.L.toFixed(1)}`);
+  document.getElementById("g-needle").style.transform = `rotate(${(f*180).toFixed(1)}deg)`;
+  document.getElementById("g-pct").textContent = tem ? pct(p) : "—";
+  document.getElementById("gauge").setAttribute("aria-label", tem ? `${pct(p)} da receita entregue` : "Sem vendas nos filtros");
+}
+
+/* Desenho */
+function render(){
+  sincronizarFiltros();
+  const dados = filtrar();
+  const total = soma(dados);
+  const todaReceita = soma(VENDAS);
+
+  // Indicadores
+  const naoEntregue = soma(dados.filter(v=>v.status==="Em trânsito"||v.status==="Aguardando"));
+  const cancelada = soma(dados.filter(v=>v.status==="Cancelada"));
+  $("heroTotal").textContent = usdC(total);
+  $("heroCap").textContent = dados.length === VENDAS.length ? "de receita em todas as vendas" : `de receita em ${plural(dados.length,"venda","vendas")} filtradas`;
+  const entregue = soma(dados.filter(v=>v.status==="Entregue"));
+  atualizarMedidor(total ? entregue/total : 0, dados.length>0);
+  $("gaugeCap").textContent = dados.length ? `da receita já foi entregue (${usdC(entregue)})` : "Nenhuma venda com esses filtros";
+  $("k-vendas").textContent = dados.length;
+  $("k-vendas-n").textContent = `de ${VENDAS.length} na base`;
+  $("k-receita").textContent = usdC(total);
+  $("k-receita-n").textContent = usd(total);
+  $("k-ticket").textContent = dados.length ? usdC(total/dados.length) : "—";
+  $("k-ticket-n").textContent = dados.length ? `média de ${usd(total/dados.length)}` : "";
+  $("k-pend").textContent = dados.length ? usdC(naoEntregue) : "—";
+  $("k-pend-n").textContent = dados.length ? `${pct(naoEntregue/total)} da receita` + (cancelada ? `, mais ${usdC(cancelada)} cancelados` : "") : "";
+
+  // Pergunta 1: famílias (ignora o próprio filtro, para manter o contexto)
+  const d1 = filtrar("familia");
+  const g1 = agrupar(d1,"familia").sort((a,b)=>b.valor-a.valor);
+  if (!g1.length) vazio($("q1"), $("q1i")); else {
+    const t1 = soma(d1);
+    const porUn = [...g1].sort((a,b)=>b.n-a.n)[0];
+    const top = g1[0];
+    $("q1i").innerHTML = `<b>${top.nome}</b> lidera com ${usdC(top.valor)}, ${pct(top.valor/t1)} da receita, em ${plural(top.n,"venda","vendas")}.` +
+      (porUn.nome!==top.nome ? ` Em unidades, o líder é ${porUn.nome} (${porUn.n}), mas rende menos por venda.` : ` Também lidera em unidades.`);
+    barras($("q1"), g1, {chave:"familia", ativo:F.familia});
+  }
+
+  // Pergunta 2: estados
+  const d2 = filtrar("estado");
+  const g2 = agrupar(d2,"estado").sort((a,b)=>b.valor-a.valor);
+  if (!g2.length) { vazio($("q2"), $("q2i")); $("q2h").textContent = ""; } else {
+    const t2 = soma(d2);
+    const N = 10;
+    let vis = g2.slice(0,N);
+    if (F.estado && !vis.some(x=>x.nome===F.estado)) { const s = g2.find(x=>x.nome===F.estado); if (s) vis.push(s); }
+    const resto = g2.filter(x=>!vis.includes(x));
+    const vRest = resto.reduce((s,x)=>s+x.valor,0), nRest = resto.reduce((s,x)=>s+x.n,0);
+    const a = g2[0], b = g2[1];
+    $("q2i").innerHTML = b
+      ? `<b>${a.nome}</b> e <b>${b.nome}</b> somam ${pct((a.valor+b.valor)/t2)} da receita; as vendas vêm de ${g2.length} ${g2.length===1?"estado":"estados"}.`
+      : `Todas as vendas filtradas estão em <b>${a.nome}</b>.`;
+    barras($("q2"), vis, {chave:"estado", ativo:F.estado, base:t2});
+    $("q2h").textContent = (resto.length ? `Outros ${resto.length} estados somam ${usdC(vRest)} (${pct(vRest/t2)}) em ${plural(nRest,"venda","vendas")}, cada um com pouco volume. ` : "") + "Clique em um estado para filtrar.";
+  }
+
+  // Pergunta 3: entregas
+  const d3 = filtrar("status");
+  const g3 = ORDEM_STATUS.map(s => agrupar(d3.filter(v=>v.status===s),"status")[0] || {nome:s,valor:0,n:0});
+  const t3 = soma(d3);
+  if (!t3) { vazio($("q3"), $("q3i")); $("q3s").innerHTML = ""; } else {
+    const ent = g3[0], tra = g3[1], aguard = g3[2], canc = g3[3];
+    $("q3i").innerHTML = `Só <b>${pct(ent.valor/t3)}</b> da receita (${usdC(ent.valor)}) está entregue. ` +
+      `Outros ${usdC(tra.valor+aguard.valor)} seguem em trânsito ou aguardando, ` + (canc.valor ? `e ${usdC(canc.valor)} (${pct(canc.valor/t3)}) foram cancelados.` : `e nada foi cancelado.`);
+    $("q3s").innerHTML = g3.filter(g=>g.valor>0).map(g=>`<i style="flex:${g.valor} 1 0;--c:${COR_STATUS[g.nome]}"></i>`).join("");
+    barras($("q3"), g3, {chave:"status", ativo:F.status, cor:l=>COR_STATUS[l.nome]});
+  }
+
+  // Cinco modelos que mais faturam
+  const gm = agrupar(dados,"modelo").sort((a,b)=>b.valor-a.valor).slice(0,5);
+  const fam = new Map(VENDAS.map(v=>[v.modelo,v.familia]));
+  $("q1m").innerHTML = gm.map((m,i)=>`<li><span class="rk">${i+1}</span><span class="mn">${m.nome}<small>${plural(m.n,"venda","vendas")}, ticket médio ${usdC(m.valor/m.n)}</small></span><span class="mv">${usdC(m.valor)}</span></li>`).join("");
+  $("q1mt").hidden = $("q1m").hidden = !gm.length;
+
+  // Tabela
+  $("tb").innerHTML = [...dados].sort((a,b)=>b.preco_usd-a.preco_usd).map(v =>
+    `<tr><td>${v.id}</td><td>${v.modelo}</td><td class="num">${v.ano_modelo}</td><td>${v.estado}</td><td>${v.pagamento}</td><td>${v.status}</td><td class="num">${usd(v.preco_usd)}</td></tr>`).join("");
+}
+
+montarFiltros();
+montarMedidor();
+render();
+</script>
+</body>
+</html>
